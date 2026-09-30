@@ -5,6 +5,7 @@
 #include <pico/stdlib.h>
 #include <pico/multicore.h>
 #include <pico/cyw43_arch.h>
+#include <thread.h>
 
 #define MAIN_TASK_PRIORITY      ( tskIDLE_PRIORITY + 1UL )
 #define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
@@ -24,8 +25,7 @@ void side_thread(void *params)
 
         xSemaphoreTake(semaphore, portMAX_DELAY);
         {
-        counter += 1;
-        printf("hello world from %s! Count %d\n", "thread", counter);
+        addToCounterAndDisplay(&counter);
         }
         xSemaphoreGive(semaphore);
 
@@ -40,8 +40,7 @@ void main_thread(void *params)
 
         xSemaphoreTake(semaphore, portMAX_DELAY);
         {
-        counter += 1;
-        printf("hello world from %s! Count %d\n", "main", counter);
+        addToCounterAndDisplay(&counter);
         }
         xSemaphoreGive(semaphore);
 
@@ -63,4 +62,12 @@ int main(void)
                 SIDE_TASK_STACK_SIZE, NULL, SIDE_TASK_PRIORITY, &side);
     vTaskStartScheduler();
 	return 0;
+}
+
+
+void addToCounterAndDisplay(int *_counter)
+{
+    (*_counter)++;
+
+    printf("hello world from %s! Count %d\n", "function", *_counter);
 }
