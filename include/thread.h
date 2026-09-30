@@ -1,6 +1,11 @@
-#ifndef THREAD.H
-#define THREAD.H
+#pragma once
 
-void addToCounterAndDisplay(int* _counter);
+#include <FreeRTOS.h>
+#include <semphr.h>
+#include <task.h>
+#include <pico/stdlib.h>
+#include <pico/multicore.h>
+#include <pico/cyw43_arch.h>
 
-#endif
+
+int addToCounterAndDisplay(int* _counter, char* _thread_name, SemaphoreHandle_t _semaphore);

@@ -1,6 +1,7 @@
 # This is the main binary. List your C files here.
 add_executable(hello_freertos
     thread.c
+    thread_utils.c
     )
 
 pico_set_program_name(hello_freertos "test")
