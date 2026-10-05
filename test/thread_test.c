@@ -85,7 +85,7 @@ void test_two_locks_deadlock(void)
 void test_runner(void *params)
 {
     while (1) {
-        vTaskDelay(100); // Give time for TTY to attach.
+        vTaskDelay(100);
         printf("Start tests\n");
         UNITY_BEGIN();
 
