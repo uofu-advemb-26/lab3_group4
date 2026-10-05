@@ -1,4 +1,4 @@
-add_executable(mytest thread_test.c unity_config.c ../src/thread_utils.c)
+add_executable(mytest thread_test.c unity_config.c ../src/thread_utils.c ../src/deadlock.c)
 
 target_link_libraries(mytest PRIVATE
   pico_stdlib
