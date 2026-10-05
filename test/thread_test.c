@@ -20,11 +20,22 @@ void test_semaphore_returns_false(void)
 
     int counter = 0;
 
-    int result = addToCounterAndDisplay(&counter, "test_thread", semaphore);
+    int result = addToCounterAndDisplay(&counter, "test_thread", semaphore, 0);
 
     TEST_ASSERT_EQUAL_INT(0, counter);
     TEST_ASSERT_EQUAL_INT(pdFALSE, result);
+}
 
+void test_counter_increments_when_lock_available(void)
+{
+    int counter = 0;
+    SemaphoreHandle_t semaphore = xSemaphoreCreateCounting(1, 1);
+
+    int result = addToCounterAndDisplay(&counter, "test_thread", semaphore, 0);
+
+    TEST_ASSERT_EQUAL_INT(pdTRUE, result);
+    TEST_ASSERT_EQUAL_INT(1, counter);
+    TEST_ASSERT_EQUAL_INT(1, uxSemaphoreGetCount(semaphore)); // lock was given back
 }
 
 
@@ -37,6 +48,7 @@ int main (void)
         UNITY_BEGIN();
 
         RUN_TEST(test_semaphore_returns_false);
+        RUN_TEST(test_counter_increments_when_lock_available);
 
         sleep_ms(5000);
         UNITY_END();

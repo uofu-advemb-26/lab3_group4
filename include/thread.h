@@ -8,4 +8,4 @@
 #include <pico/cyw43_arch.h>
 
 
-int addToCounterAndDisplay(int* _counter, char* _thread_name, SemaphoreHandle_t _semaphore);
+int addToCounterAndDisplay(int* _counter, char* _thread_name, SemaphoreHandle_t _semaphore, TickType_t _timeout);

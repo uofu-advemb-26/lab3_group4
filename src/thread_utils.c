@@ -2,9 +2,9 @@
 #include "thread.h"
 
 int addToCounterAndDisplay(int *_counter, char *_thread_name,
-                           SemaphoreHandle_t _semaphore)
+                           SemaphoreHandle_t _semaphore, TickType_t _timeout)
 {
-    if (xSemaphoreTake(_semaphore, 0) != pdTRUE) {
+    if (xSemaphoreTake(_semaphore, _timeout) != pdTRUE) {
         return pdFALSE;
     }
 
