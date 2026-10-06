@@ -8,6 +8,7 @@
 #include <unity.h>
 #include "thread.h"
 #include "deadlock.h"
+#include "orphaned_lock.h"
 
 void setUp(void) {}
 
@@ -82,6 +83,69 @@ void test_two_locks_deadlock(void)
     TEST_ASSERT_EQUAL_INT(0, b_count);
 }
 
+void test_orphaned_lock_counts(void)
+{
+    SemaphoreHandle_t semaphore = xSemaphoreCreateCounting(1, 1);
+    // start at 1 so the next count is even and it prints
+    orphaned_args_t args = {semaphore, 1};
+
+    int result = orphaned_lock_step(&args, 0);
+    int lock_count = uxSemaphoreGetCount(semaphore);
+
+    vSemaphoreDelete(semaphore);
+
+    TEST_ASSERT_EQUAL_INT(pdTRUE, result);
+    TEST_ASSERT_EQUAL_INT(2, args.counter);
+    TEST_ASSERT_EQUAL_INT(1, lock_count);
+}
+
+void test_orphaned_lock_deadlocks(void)
+{
+    SemaphoreHandle_t semaphore = xSemaphoreCreateCounting(1, 1);
+    orphaned_args_t args = {semaphore, 0};
+
+    TaskHandle_t thread;
+    xTaskCreate(orphaned_lock, "Orphaned", configMINIMAL_STACK_SIZE,
+                &args, tskIDLE_PRIORITY + 1, &thread);
+
+    vTaskDelay(100);
+
+    eTaskState state = eTaskGetState(thread);
+    vTaskSuspend(thread);
+
+    int count = args.counter;
+    int lock_count = uxSemaphoreGetCount(semaphore);
+
+    vTaskDelete(thread);
+    vSemaphoreDelete(semaphore);
+
+    // stuck waiting on the lock it never gave back after count 1
+    TEST_ASSERT_EQUAL_INT(eBlocked, state);
+    TEST_ASSERT_EQUAL_INT(1, count);
+    TEST_ASSERT_EQUAL_INT(0, lock_count);
+}
+
+void test_fixed_lock_no_deadlock(void)
+{
+    SemaphoreHandle_t semaphore = xSemaphoreCreateCounting(1, 1);
+    orphaned_args_t args = {semaphore, 0};
+
+    TaskHandle_t thread;
+    xTaskCreate(fixed_lock, "Fixed", configMINIMAL_STACK_SIZE,
+                &args, tskIDLE_PRIORITY + 1, &thread);
+
+    vTaskDelay(pdMS_TO_TICKS(500));
+
+    vTaskSuspend(thread);
+
+    int count = args.counter;
+
+    vTaskDelete(thread);
+    vSemaphoreDelete(semaphore);
+
+    TEST_ASSERT_GREATER_THAN_INT(2, count);
+}
+
 void test_runner(void *params)
 {
     while (1) {
@@ -92,6 +156,9 @@ void test_runner(void *params)
         RUN_TEST(test_semaphore_returns_false);
         RUN_TEST(test_counter_increments_when_lock_available);
         RUN_TEST(test_two_locks_deadlock);
+        RUN_TEST(test_orphaned_lock_counts);
+        RUN_TEST(test_orphaned_lock_deadlocks);
+        RUN_TEST(test_fixed_lock_no_deadlock);
 
         UNITY_END();
     }
